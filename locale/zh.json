@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "项目工作空间",
+    "description": "把 code-workspace 文件作为 DSH 工作区打开。"
+  }
+}

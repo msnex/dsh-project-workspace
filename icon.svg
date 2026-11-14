@@ -1,0 +1,13 @@
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M9 12.5c0-1.38 1.12-2.5 2.5-2.5h5.7l2.4 2.8H26c1.38 0 2.5 1.12 2.5 2.5v9.2c0 1.38-1.12 2.5-2.5 2.5H11.5C10.12 27 9 25.88 9 24.5V12.5Z" fill="url(#cs-folder)"/>
+  <rect x="13.4" y="17" width="3.8" height="3.8" rx="1.1" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="19.1" y="17" width="3.8" height="3.8" rx="1.1" fill="#FFFFFF" fill-opacity="0.62"/>
+  <rect x="13.4" y="22.1" width="3.8" height="3.8" rx="1.1" fill="#FFFFFF" fill-opacity="0.62"/>
+  <rect x="19.1" y="22.1" width="3.8" height="3.8" rx="1.1" fill="#FFFFFF" fill-opacity="0.95"/>
+  <defs>
+    <linearGradient id="cs-folder" x1="12" y1="10.5" x2="27.5" y2="27" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6FB4FB"/>
+      <stop offset="1" stop-color="#3650DE"/>
+    </linearGradient>
+  </defs>
+</svg>
