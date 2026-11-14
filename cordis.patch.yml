@@ -1,5 +1,5 @@
-# The code-workspace bundle: one row owns the Host routes, the writable-root
+# The project-workspace bundle: one row owns the Host routes, the writable-root
 # grants, and the browser half served from this package's `dsh.client` section.
 - insert:
-    - id: codespace
-      name: '@local/dsh-codespace'
+    - id: project-workspace
+      name: '@msnex/dsh-project-workspace'

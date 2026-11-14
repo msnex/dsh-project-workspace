@@ -17,7 +17,7 @@ import { createWorkspaceRoutes } from '../lib/routes.js'
 let base
 
 before(async () => {
-  base = await realpath(await mkdtemp(join(tmpdir(), 'dsh-codespace-test-')))
+  base = await realpath(await mkdtemp(join(tmpdir(), 'dsh-project-workspace-test-')))
 })
 
 after(async () => {
@@ -30,7 +30,7 @@ after(async () => {
  * @returns the request.
  */
 function post(body) {
-  return new Request('http://127.0.0.1/api/codespace', {
+  return new Request('http://127.0.0.1/api/project-workspace', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),

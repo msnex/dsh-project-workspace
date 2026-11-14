@@ -1,24 +1,24 @@
 /**
- * Browser half of the code-workspace bundle.
+ * Browser half of the project-workspace bundle.
  *
- * Adds a "WorkSpaces" navigation row above Plugins, a full page that opens
+ * Adds a "Project workspaces" navigation row above Plugins, a full page that opens
  * `.code-workspace` files through the Host routes, and a frame-wide file
  * picker dialog. The module is authored directly in the Client loader's
  * factory format; only React comes from the shared module table.
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-codespace',
+  id: '@msnex/dsh-project-workspace',
   factory(require) {
     const React = require('react')
     const h = React.createElement
 
-    const NS = 'codespace'
-    const PANEL_ID = 'codespace'
-    const DIALOG_ID = 'codespace.picker'
-    const NOTICE_ID = 'codespace.notice'
-    const FILES_TYPE_ID = '@local/dsh-codespace/files'
-    const FILES_KIND = 'codespace.files'
+    const NS = 'project-workspace'
+    const PANEL_ID = 'project-workspace'
+    const DIALOG_ID = 'project-workspace.picker'
+    const NOTICE_ID = 'project-workspace.notice'
+    const FILES_TYPE_ID = '@msnex/dsh-project-workspace/files'
+    const FILES_KIND = 'project-workspace.files'
     const BUSY_TIMEOUT_MS = 6000
     const SEARCH_DEBOUNCE_MS = 250
     const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
@@ -27,7 +27,7 @@ window.__ModuleLoader__.load({
     const en = {
       panel: 'Project workspaces',
       'page.title': 'Project workspaces',
-      'page.open': 'Open workspace from file',
+      'page.open': 'Open project workspace from a file',
       'list.loading': 'Loading project workspaces',
       'list.error': 'The project workspace list could not be read.',
       'list.retry': 'Retry',
@@ -95,7 +95,7 @@ window.__ModuleLoader__.load({
     const zh = {
       panel: '项目工作空间',
       'page.title': '项目工作空间',
-      'page.open': '从文件打开工作空间',
+      'page.open': '从文件打开项目工作空间',
       'list.loading': '正在读取项目工作空间',
       'list.error': '无法读取项目工作空间列表。',
       'list.retry': '重试',
@@ -217,86 +217,86 @@ window.__ModuleLoader__.load({
 
     /** Page, dialog, and control styles over host theme tokens. */
     const CSS = `
-.cs-page {
+.pw-page {
   display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden;
   color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-base);
   font-size: 14px; line-height: 1.6;
 }
-.cs-page-scroll { flex: 1; min-height: 0; overflow: auto; scrollbar-gutter: stable; }
-.cs-page-content { max-width: 960px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 48px) 48px; }
-.cs-page-heading {
+.pw-page-scroll { flex: 1; min-height: 0; overflow: auto; scrollbar-gutter: stable; }
+.pw-page-content { max-width: 960px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 48px) 48px; }
+.pw-page-heading {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 16px; padding-top: 28px; margin-bottom: 12px;
 }
-:root[data-platform='darwin'] .cs-page-heading { padding-top: calc(28px + var(--dsh-frame-top-clearance, 0px)); }
-.cs-page-heading h1 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 500; }
-@media (max-width: 767px) { .cs-page-content { padding-inline: 20px; } }
+:root[data-platform='darwin'] .pw-page-heading { padding-top: calc(28px + var(--dsh-frame-top-clearance, 0px)); }
+.pw-page-heading h1 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 500; }
+@media (max-width: 767px) { .pw-page-content { padding-inline: 20px; } }
 
-.cs-primary {
+.pw-primary {
   display: inline-flex; align-items: center; gap: 6px; flex: none;
   height: 32px; padding: 0 14px; border: 0; border-radius: var(--dsw-radius-lg);
   background: var(--dsw-alias-brand-primary); color: var(--dsw-alias-label-primary-foreground);
   font: inherit; font-size: 13px; line-height: 20px; white-space: nowrap; cursor: pointer;
 }
 @media (hover: hover) {
-  .cs-primary:hover { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 88%, var(--dsw-alias-label-primary)); }
+  .pw-primary:hover { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 88%, var(--dsw-alias-label-primary)); }
 }
-.cs-primary:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
-.cs-primary:disabled { opacity: 0.55; cursor: default; }
+.pw-primary:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
+.pw-primary:disabled { opacity: 0.55; cursor: default; }
 
-.cs-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.cs-row {
+.pw-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.pw-row {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px;
   border: 0.5px solid transparent; border-radius: var(--dsw-radius-sm); background: transparent;
   color: inherit; font: inherit; text-align: left; cursor: pointer;
 }
 @media (hover: hover) {
-  .cs-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
+  .pw-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
 }
-.cs-row:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
-.cs-row:disabled { opacity: 0.7; cursor: default; }
-.cs-row-glyph {
+.pw-row:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
+.pw-row:disabled { opacity: 0.7; cursor: default; }
+.pw-row-glyph {
   display: flex; flex: none; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: var(--dsw-radius-sm);
   background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary);
 }
-.cs-row-main { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
-.cs-row-title { overflow: hidden; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.cs-row-path {
+.pw-row-main { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.pw-row-title { overflow: hidden; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.pw-row-path {
   overflow: hidden; color: var(--dsw-alias-label-secondary); font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   text-overflow: ellipsis; white-space: nowrap;
 }
-.cs-row-chevron { flex: none; color: var(--dsw-alias-label-tertiary); }
+.pw-row-chevron { flex: none; color: var(--dsw-alias-label-tertiary); }
 
-.cs-empty { margin: 0; padding: 48px 0; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
-.cs-loading { display: flex; justify-content: center; padding: 48px 0; }
-.cs-error { display: flex; align-items: center; gap: 8px; padding: 12px 0; color: var(--dsw-alias-state-error-primary); font-size: 13px; }
-.cs-icon-button {
+.pw-empty { margin: 0; padding: 48px 0; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
+.pw-loading { display: flex; justify-content: center; padding: 48px 0; }
+.pw-error { display: flex; align-items: center; gap: 8px; padding: 12px 0; color: var(--dsw-alias-state-error-primary); font-size: 13px; }
+.pw-icon-button {
   display: inline-flex; flex: none; align-items: center; justify-content: center;
   width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer;
 }
 @media (hover: hover) {
-  .cs-icon-button:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+  .pw-icon-button:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
 }
-.cs-icon-button:disabled { opacity: 0.45; cursor: default; }
-.cs-icon-button[data-active='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
-.cs-icon-button:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
+.pw-icon-button:disabled { opacity: 0.45; cursor: default; }
+.pw-icon-button[data-active='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.pw-icon-button:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
 
-.cs-spinner {
+.pw-spinner {
   width: 14px; height: 14px; border: 2px solid color-mix(in srgb, var(--dsw-alias-label-secondary) 35%, transparent);
   border-top-color: var(--dsw-alias-brand-primary); border-radius: 50%;
-  animation: cs-spin 0.8s linear infinite;
+  animation: pw-spin 0.8s linear infinite;
 }
-@keyframes cs-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .cs-spinner { animation: none; } }
+@keyframes pw-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pw-spinner { animation: none; } }
 
-.cs-overlay {
+.pw-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 24px; background: var(--dsw-alias-bg-mask-1);
 }
-.cs-dialog {
+.pw-dialog {
   display: flex; flex-direction: column; width: min(680px, 100%);
   max-height: min(560px, calc(100vh - 96px));
   max-height: min(560px, calc(100dvh - 96px));
@@ -304,66 +304,66 @@ window.__ModuleLoader__.load({
   background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary);
   box-shadow: 0 18px 48px var(--dsw-alias-bg-mask-3);
 }
-.cs-dialog-head { display: flex; align-items: center; gap: 12px; padding: 16px 16px 10px 20px; }
-.cs-dialog-title { flex: 1; min-width: 0; margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; }
-.cs-dialog-body { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; padding: 4px 20px 12px; }
-.cs-path-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.cs-path-input {
+.pw-dialog-head { display: flex; align-items: center; gap: 12px; padding: 16px 16px 10px 20px; }
+.pw-dialog-title { flex: 1; min-width: 0; margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; }
+.pw-dialog-body { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; padding: 4px 20px 12px; }
+.pw-path-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pw-path-input {
   flex: 1 1 200px; min-width: 0; height: 32px; padding: 0 10px;
   border: 0.5px solid var(--dsw-alias-border-l1); border-radius: var(--dsw-radius-sm);
   background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary);
   font: inherit; font-size: 13px;
 }
-.cs-path-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -1px; }
-.cs-browse-wrap {
+.pw-path-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -1px; }
+.pw-browse-wrap {
   flex: 1; min-height: 140px; overflow: auto;
   border: 0.5px solid var(--dsw-alias-border-l1); border-radius: var(--dsw-radius-sm);
   background: var(--dsw-alias-bg-layer-1);
 }
-.cs-browse { display: flex; flex-direction: column; gap: 1px; margin: 0; padding: 4px; list-style: none; }
-.cs-browse-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
-.cs-file-row {
+.pw-browse { display: flex; flex-direction: column; gap: 1px; margin: 0; padding: 4px; list-style: none; }
+.pw-browse-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
+.pw-file-row {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px;
   border: 0; border-radius: var(--dsw-radius-sm); background: transparent; color: inherit;
   font: inherit; font-size: 13px; text-align: left; cursor: pointer;
 }
 @media (hover: hover) {
-  .cs-file-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
+  .pw-file-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
 }
-.cs-file-row[data-selected='true'] { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 15%, transparent); }
-.cs-file-row:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
-.cs-file-icon { flex: none; color: var(--dsw-alias-label-secondary); }
-.cs-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cs-file-check { flex: none; color: var(--dsw-alias-brand-primary); }
-.cs-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }
-.cs-dialog-error { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 13px; }
-.cs-dialog-foot { display: flex; align-items: center; gap: 12px; padding: 10px 20px 18px; }
-.cs-selected {
+.pw-file-row[data-selected='true'] { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 15%, transparent); }
+.pw-file-row:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
+.pw-file-icon { flex: none; color: var(--dsw-alias-label-secondary); }
+.pw-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pw-file-check { flex: none; color: var(--dsw-alias-brand-primary); }
+.pw-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }
+.pw-dialog-error { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 13px; }
+.pw-dialog-foot { display: flex; align-items: center; gap: 12px; padding: 10px 20px 18px; }
+.pw-selected {
   flex: 1; min-width: 0; overflow: hidden; color: var(--dsw-alias-label-secondary); font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   text-overflow: ellipsis; white-space: nowrap;
 }
-.cs-dialog-actions { display: flex; flex: none; gap: 8px; margin-left: auto; }
-.cs-button {
+.pw-dialog-actions { display: flex; flex: none; gap: 8px; margin-left: auto; }
+.pw-button {
   height: 32px; padding: 0 14px; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: var(--dsw-radius-lg);
   background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; cursor: pointer;
 }
 @media (hover: hover) {
-  .cs-button:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }
+  .pw-button:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }
 }
-.cs-button:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
-.cs-button:disabled { opacity: 0.5; cursor: default; }
-.cs-button[data-variant='primary'] { border-color: transparent; background: var(--dsw-alias-brand-primary); color: var(--dsw-alias-label-primary-foreground); }
+.pw-button:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
+.pw-button:disabled { opacity: 0.5; cursor: default; }
+.pw-button[data-variant='primary'] { border-color: transparent; background: var(--dsw-alias-brand-primary); color: var(--dsw-alias-label-primary-foreground); }
 @media (hover: hover) {
-  .cs-button[data-variant='primary']:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 88%, var(--dsw-alias-label-primary)); }
+  .pw-button[data-variant='primary']:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 88%, var(--dsw-alias-label-primary)); }
 }
-.cs-button-small { height: 28px; padding: 0 10px; font-size: 12px; }
+.pw-button-small { height: 28px; padding: 0 10px; font-size: 12px; }
 
 @media (pointer: coarse) {
-  .cs-path-input { font-size: 16px; height: 36px; }
+  .pw-path-input { font-size: 16px; height: 36px; }
 }
 
-.cs-toast {
+.pw-toast {
   position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
   display: flex; align-items: flex-start; gap: 10px;
   width: max-content; max-width: min(560px, calc(100vw - 48px));
@@ -372,66 +372,66 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.5;
   box-shadow: 0 8px 24px var(--dsw-alias-bg-mask-2);
 }
-.cs-toast-mark { flex: none; margin-top: 2px; color: var(--dsw-alias-state-warn-primary); }
-.cs-toast-text { flex: 1; min-width: 0; }
+.pw-toast-mark { flex: none; margin-top: 2px; color: var(--dsw-alias-state-warn-primary); }
+.pw-toast-text { flex: 1; min-width: 0; }
 
-.cs-rfiles {
+.pw-rfiles {
   display: flex; flex: 1 1 auto; flex-direction: column; height: 100%;
   min-width: 0; min-height: 0;
   color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.5;
 }
-.cs-rfiles-head {
+.pw-rfiles-head {
   display: flex; flex: 0 0 auto; align-items: center; gap: 4px;
   height: 38px; padding: 0 6px; border-bottom: 0.5px solid var(--dsw-alias-border-l3);
 }
-.cs-rfiles-search {
+.pw-rfiles-search {
   display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; height: 28px; padding: 0 8px;
   border: 0.5px solid var(--dsw-alias-border-l1); border-radius: var(--dsw-radius-sm);
   background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-secondary);
 }
-.cs-rfiles-search:focus-within { border-color: var(--dsw-alias-brand-primary); }
-.cs-rfiles-search-input {
+.pw-rfiles-search:focus-within { border-color: var(--dsw-alias-brand-primary); }
+.pw-rfiles-search-input {
   flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
   color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px;
 }
-.cs-rfiles-search-input::placeholder { color: var(--dsw-alias-label-tertiary); }
-.cs-rfiles-clear { width: 20px; height: 20px; }
-.cs-rfiles-body {
+.pw-rfiles-search-input::placeholder { color: var(--dsw-alias-label-tertiary); }
+.pw-rfiles-clear { width: 20px; height: 20px; }
+.pw-rfiles-body {
   flex: 1; min-height: 0; margin-right: 2px; padding: 8px 0 8px 8px;
   overflow: auto; scrollbar-gutter: stable;
 }
-.cs-rfiles-section + .cs-rfiles-section { margin-top: 12px; }
-.cs-rfiles-section[data-collapsed='true'] + .cs-rfiles-section[data-collapsed='true'] { margin-top: 2px; }
-.cs-rfiles-root {
+.pw-rfiles-section + .pw-rfiles-section { margin-top: 12px; }
+.pw-rfiles-section[data-collapsed='true'] + .pw-rfiles-section[data-collapsed='true'] { margin-top: 2px; }
+.pw-rfiles-root {
   box-sizing: border-box; display: flex; align-items: center; gap: 6px; width: 100%;
   padding: 5px 10px; border: 0; border-radius: var(--dsw-radius-md);
   background: transparent; color: var(--dsw-alias-label-secondary);
   font: inherit; font-size: 13px; line-height: 1.5; text-align: left; cursor: pointer;
 }
-.cs-rfiles-root:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
-.cs-rfiles-root-chevron {
+.pw-rfiles-root:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: -2px; }
+.pw-rfiles-root-chevron {
   display: inline-flex; flex: none; color: var(--dsw-alias-label-tertiary);
   transition: transform 120ms ease;
 }
-.cs-rfiles-root[aria-expanded='true'] .cs-rfiles-root-chevron { transform: rotate(90deg); }
-.cs-rfiles-root-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pw-rfiles-root[aria-expanded='true'] .pw-rfiles-root-chevron { transform: rotate(90deg); }
+.pw-rfiles-root-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (hover: hover) {
-  .cs-rfiles-root:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+  .pw-rfiles-root:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cs-rfiles-root-chevron { transition: none; }
+  .pw-rfiles-root-chevron { transition: none; }
 }
-.cs-rfiles-note {
+.pw-rfiles-note {
   margin: 0; padding: 3px 10px; color: var(--dsw-alias-label-tertiary);
   font-size: 12px; line-height: 1.5;
 }
-.cs-rfiles-note[data-tone='error'] { color: var(--dsw-alias-state-error-primary); }
-.cs-rfiles-note-actions { display: inline-flex; margin-left: 6px; }
-.cs-rfiles-state { padding: 24px 12px; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
-.cs-rfiles-state-actions { display: flex; justify-content: center; margin-top: 8px; }
-.cs-rfiles-title-icon { display: inline-flex; margin-right: 6px; vertical-align: -3px; }
+.pw-rfiles-note[data-tone='error'] { color: var(--dsw-alias-state-error-primary); }
+.pw-rfiles-note-actions { display: inline-flex; margin-left: 6px; }
+.pw-rfiles-state { padding: 24px 12px; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
+.pw-rfiles-state-actions { display: flex; justify-content: center; margin-top: 8px; }
+.pw-rfiles-title-icon { display: inline-flex; margin-right: 6px; vertical-align: -3px; }
 @media (hover: hover) {
-  .cs-rfiles-search:hover { border-color: var(--dsw-alias-border-l2); }
+  .pw-rfiles-search:hover { border-color: var(--dsw-alias-border-l2); }
 }
 `
 
@@ -805,7 +805,7 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * The WorkSpaces page.
+     * The Project workspaces page.
      * @param props - framework hooks, locale, and injected services.
      * @returns the page.
      */
@@ -823,7 +823,7 @@ window.__ModuleLoader__.load({
         setList(current => ({ ...current, phase: 'loading', error: null }))
         void (async () => {
           try {
-            const response = await fetch('api/codespace.list', {
+            const response = await fetch('api/project-workspace.list', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: '{}',
@@ -856,50 +856,50 @@ window.__ModuleLoader__.load({
         }
       }
 
-      return h('section', { className: 'cs-page', 'aria-label': t('page.title') },
+      return h('section', { className: 'pw-page', 'aria-label': t('page.title') },
         h(Styles),
-        h('div', { className: 'cs-page-scroll' },
-          h('div', { className: 'cs-page-content' },
-            h('header', { className: 'cs-page-heading', 'data-window-drag': true },
+        h('div', { className: 'pw-page-scroll' },
+          h('div', { className: 'pw-page-content' },
+            h('header', { className: 'pw-page-heading', 'data-window-drag': true },
               h('h1', null, t('page.title')),
               h('button', {
-                className: 'cs-primary', type: 'button',
+                className: 'pw-primary', type: 'button',
                 onClick: () => picker.set({ open: true }),
               }, h(IconFolder, { size: 14 }), t('page.open')),
             ),
-            rowError === null ? null : h('div', { className: 'cs-error', role: 'alert' },
+            rowError === null ? null : h('div', { className: 'pw-error', role: 'alert' },
               h(IconWarning, { size: 14 }), rowError,
             ),
             list.phase === 'loading'
-              ? h('div', { className: 'cs-loading', role: 'status' },
-                h('span', { className: 'cs-spinner', 'aria-label': t('list.loading') }))
+              ? h('div', { className: 'pw-loading', role: 'status' },
+                h('span', { className: 'pw-spinner', 'aria-label': t('list.loading') }))
               : list.phase === 'error'
-                ? h('div', { className: 'cs-error', role: 'alert' },
+                ? h('div', { className: 'pw-error', role: 'alert' },
                   h(IconWarning, { size: 14 }), list.error,
                   h('button', {
-                    className: 'cs-button cs-button-small', type: 'button',
+                    className: 'pw-button pw-button-small', type: 'button',
                     onClick: () => setRefresh(value => value + 1),
                   }, t('list.retry')),
                 )
                 : list.entries.length === 0
-                  ? h('p', { className: 'cs-empty' }, t('list.empty'))
-                  : h('ul', { className: 'cs-list' }, list.entries.map(entry =>
+                  ? h('p', { className: 'pw-empty' }, t('list.empty'))
+                  : h('ul', { className: 'pw-list' }, list.entries.map(entry =>
                     h('li', { key: entry.workspaceId },
                       h('button', {
-                        className: 'cs-row', type: 'button',
+                        className: 'pw-row', type: 'button',
                         onClick: () => { void openEntry(entry) },
                         disabled: busyId !== null,
                         title: entry.file,
                         'aria-description': t('row.openLabel', { title: entry.title }),
                       },
-                        h('span', { className: 'cs-row-glyph' }, h(IconWorkspace, { size: 16 })),
-                        h('span', { className: 'cs-row-main' },
-                          h('span', { className: 'cs-row-title' }, entry.title),
-                          h('span', { className: 'cs-row-path' }, entry.file),
+                        h('span', { className: 'pw-row-glyph' }, h(IconWorkspace, { size: 16 })),
+                        h('span', { className: 'pw-row-main' },
+                          h('span', { className: 'pw-row-title' }, entry.title),
+                          h('span', { className: 'pw-row-path' }, entry.file),
                         ),
                         busyId === entry.workspaceId
-                          ? h('span', { className: 'cs-spinner' })
-                          : h('span', { className: 'cs-row-chevron' }, h(IconChevron, { size: 14 })),
+                          ? h('span', { className: 'pw-spinner' })
+                          : h('span', { className: 'pw-row-chevron' }, h(IconChevron, { size: 14 })),
                       ),
                     ),
                   )),
@@ -949,7 +949,7 @@ window.__ModuleLoader__.load({
         setError(null)
         setSelected(null)
         try {
-          const response = await fetch('api/codespace.browse', {
+          const response = await fetch('api/project-workspace.browse', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -1051,7 +1051,7 @@ window.__ModuleLoader__.load({
           controller.abort()
         }, 30_000)
         try {
-          const response = await fetch('api/codespace.open', {
+          const response = await fetch('api/project-workspace.open', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ file }),
@@ -1119,45 +1119,45 @@ window.__ModuleLoader__.load({
 
       let body
       if (phase === 'idle' || phase === 'loading') {
-        body = h('div', { className: 'cs-browse-state', role: 'status' },
-          h('span', { className: 'cs-spinner', 'aria-label': t('picker.loading') }))
+        body = h('div', { className: 'pw-browse-state', role: 'status' },
+          h('span', { className: 'pw-spinner', 'aria-label': t('picker.loading') }))
       } else if (phase === 'error') {
-        body = h('div', { className: 'cs-browse-state' },
+        body = h('div', { className: 'pw-browse-state' },
           h('span', null, error ?? t('picker.browseError')),
           h('button', {
-            className: 'cs-button cs-button-small', type: 'button',
+            className: 'pw-button pw-button-small', type: 'button',
             onClick: () => { void browse((listing?.path ?? pathDraft.trim()) || undefined) },
           }, t('picker.retry')),
         )
       } else if (directories.length === 0 && files.length === 0) {
-        body = h('div', { className: 'cs-browse-state' }, t('picker.empty'))
+        body = h('div', { className: 'pw-browse-state' }, t('picker.empty'))
       } else {
-        body = h('ul', { className: 'cs-browse' },
+        body = h('ul', { className: 'pw-browse' },
           directories.map(entry => h('li', { key: `d:${entry.path}` },
-            h('button', { className: 'cs-file-row', type: 'button', title: entry.path, disabled: busy, onClick: () => { void browse(entry.path) } },
-              h('span', { className: 'cs-file-icon' }, h(IconFolder, { size: 16 })),
-              h('span', { className: 'cs-file-name' }, entry.name),
+            h('button', { className: 'pw-file-row', type: 'button', title: entry.path, disabled: busy, onClick: () => { void browse(entry.path) } },
+              h('span', { className: 'pw-file-icon' }, h(IconFolder, { size: 16 })),
+              h('span', { className: 'pw-file-name' }, entry.name),
             ),
           )),
           files.map(entry => h('li', { key: `f:${entry.path}` },
             h('button', {
-              className: 'cs-file-row', type: 'button', title: entry.path,
+              className: 'pw-file-row', type: 'button', title: entry.path,
               'aria-pressed': selected === entry.path,
               'data-selected': selected === entry.path ? 'true' : undefined,
               disabled: busy,
               onClick: () => setSelected(entry.path),
               onDoubleClick: () => { setSelected(entry.path); void openFile(entry.path) },
             },
-              h('span', { className: 'cs-file-icon' }, h(IconFile, { size: 16 })),
-              h('span', { className: 'cs-file-name' }, entry.name),
-              selected === entry.path ? h('span', { className: 'cs-file-check' }, h(IconCheck, { size: 14 })) : null,
+              h('span', { className: 'pw-file-icon' }, h(IconFile, { size: 16 })),
+              h('span', { className: 'pw-file-name' }, entry.name),
+              selected === entry.path ? h('span', { className: 'pw-file-check' }, h(IconCheck, { size: 14 })) : null,
             ),
           )),
         )
       }
 
       return h('div', {
-        className: 'cs-overlay',
+        className: 'pw-overlay',
         onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
         onKeyDown: (event) => {
           if (event.key !== 'Escape') return
@@ -1167,32 +1167,32 @@ window.__ModuleLoader__.load({
         },
       },
         h('div', {
-          className: 'cs-dialog', role: 'dialog', 'aria-modal': 'true',
-          'aria-labelledby': 'codespace-dialog-title',
+          className: 'pw-dialog', role: 'dialog', 'aria-modal': 'true',
+          'aria-labelledby': 'project-workspace-dialog-title',
           ref: dialogRef, onKeyDown: onTab,
         },
           h(Styles),
-          h('div', { className: 'cs-dialog-head' },
-            h('h2', { className: 'cs-dialog-title', id: 'codespace-dialog-title' }, t('picker.title')),
+          h('div', { className: 'pw-dialog-head' },
+            h('h2', { className: 'pw-dialog-title', id: 'project-workspace-dialog-title' }, t('picker.title')),
             h('button', {
-              className: 'cs-icon-button', type: 'button', 'aria-label': t('picker.close'),
+              className: 'pw-icon-button', type: 'button', 'aria-label': t('picker.close'),
               title: t('picker.close'), onClick: close,
             }, h(IconClose, { size: 14 })),
           ),
-          h('div', { className: 'cs-dialog-body' },
-            h('div', { className: 'cs-path-row' },
+          h('div', { className: 'pw-dialog-body' },
+            h('div', { className: 'pw-path-row' },
               h('button', {
-                className: 'cs-icon-button', type: 'button', 'aria-label': t('picker.up'), title: t('picker.up'),
+                className: 'pw-icon-button', type: 'button', 'aria-label': t('picker.up'), title: t('picker.up'),
                 disabled: busy || phase === 'loading' || listing?.parent == null,
                 onClick: () => { void browse(listing?.parent ?? undefined) },
               }, h(IconUp, { size: 14 })),
               h('button', {
-                className: 'cs-icon-button', type: 'button', 'aria-label': t('picker.home'), title: t('picker.home'),
+                className: 'pw-icon-button', type: 'button', 'aria-label': t('picker.home'), title: t('picker.home'),
                 disabled: busy || phase === 'loading',
                 onClick: () => { void browse(listing?.home ?? undefined) },
               }, h(IconHome, { size: 14 })),
               h('input', {
-                className: 'cs-path-input', type: 'text', value: pathDraft, spellCheck: false,
+                className: 'pw-path-input', type: 'text', value: pathDraft, spellCheck: false,
                 'aria-label': t('picker.pathLabel'),
                 disabled: busy, ref: inputRef,
                 onChange: event => setPathDraft(event.target.value),
@@ -1202,26 +1202,26 @@ window.__ModuleLoader__.load({
                   submitPath()
                 },
               }),
-              h('button', { className: 'cs-button cs-button-small', type: 'button', disabled: busy, onClick: submitPath }, t('picker.go')),
+              h('button', { className: 'pw-button pw-button-small', type: 'button', disabled: busy, onClick: submitPath }, t('picker.go')),
               h('button', {
-                className: 'cs-icon-button', type: 'button',
+                className: 'pw-icon-button', type: 'button',
                 'aria-label': includeHidden ? t('picker.hideHidden') : t('picker.showHidden'),
                 title: includeHidden ? t('picker.hideHidden') : t('picker.showHidden'),
                 'aria-pressed': includeHidden, 'data-active': includeHidden ? 'true' : undefined,
                 disabled: busy, onClick: toggleHidden,
               }, h(IconEye, { size: 14 })),
             ),
-            h('div', { className: 'cs-browse-wrap' }, body),
-            listing?.truncated === true ? h('p', { className: 'cs-hint' }, t('picker.truncated')) : null,
-            openError === null ? null : h('p', { className: 'cs-dialog-error', role: 'alert' },
+            h('div', { className: 'pw-browse-wrap' }, body),
+            listing?.truncated === true ? h('p', { className: 'pw-hint' }, t('picker.truncated')) : null,
+            openError === null ? null : h('p', { className: 'pw-dialog-error', role: 'alert' },
               h(IconWarning, { size: 14 }), openError),
           ),
-          h('div', { className: 'cs-dialog-foot' },
-            selected === null ? null : h('span', { className: 'cs-selected', title: selected }, selected),
-            h('div', { className: 'cs-dialog-actions' },
-              h('button', { className: 'cs-button', type: 'button', onClick: close }, t('picker.cancel')),
+          h('div', { className: 'pw-dialog-foot' },
+            selected === null ? null : h('span', { className: 'pw-selected', title: selected }, selected),
+            h('div', { className: 'pw-dialog-actions' },
+              h('button', { className: 'pw-button', type: 'button', onClick: close }, t('picker.cancel')),
               h('button', {
-                className: 'cs-button', 'data-variant': 'primary', type: 'button',
+                className: 'pw-button', 'data-variant': 'primary', type: 'button',
                 disabled: busy || selected === null,
                 onClick: () => { if (selected !== null) void openFile(selected) },
               }, busy ? t('picker.opening') : t('picker.confirm')),
@@ -1271,7 +1271,7 @@ window.__ModuleLoader__.load({
         const key = treePathKey(path)
         setLevels(current => ({ ...current, [key]: { status: 'loading' } }))
         try {
-          const response = await fetch('api/codespace.dir', {
+          const response = await fetch('api/project-workspace.dir', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ path: requestPathOf(key) }),
@@ -1330,7 +1330,7 @@ window.__ModuleLoader__.load({
         void (async () => {
           let nextRoots = [normalizeSlashes(cwd)]
           try {
-            const response = await fetch('api/codespace.list', {
+            const response = await fetch('api/project-workspace.list', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: '{}',
@@ -1385,7 +1385,7 @@ window.__ModuleLoader__.load({
         setSearch(current => ({ ...current, phase: 'loading' }))
         void (async () => {
           try {
-            const response = await fetch('api/codespace.search', {
+            const response = await fetch('api/project-workspace.search', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ roots, query: debounced, includeHidden }),
@@ -1528,7 +1528,7 @@ window.__ModuleLoader__.load({
       const hiddenLabel = includeHidden ? t('files.hideHidden') : t('files.showHidden')
       const treeOptions = React.useMemo(() => ({
         slots: TREE_SLOTS,
-        fallback: h('p', { className: 'cs-rfiles-note' }, t('files.unavailable')),
+        fallback: h('p', { className: 'pw-rfiles-note' }, t('files.unavailable')),
       }), [t])
 
       const toggleSection = (key, mode) => {
@@ -1541,17 +1541,17 @@ window.__ModuleLoader__.load({
       const renderTree = (key, title, input, mode) => {
         const collapsed = (mode === 'search' ? collapsedSearchRoots : collapsedRoots).includes(key)
         return h('section', {
-          className: 'cs-rfiles-section',
+          className: 'pw-rfiles-section',
           key,
           'data-collapsed': collapsed ? 'true' : undefined,
         },
           h('button', {
-            className: 'cs-rfiles-root', type: 'button', title,
+            className: 'pw-rfiles-root', type: 'button', title,
             'aria-expanded': !collapsed,
             onClick: () => toggleSection(key, mode),
           },
-            h('span', { className: 'cs-rfiles-root-chevron' }, h(IconChevron, { size: 12 })),
-            h('span', { className: 'cs-rfiles-root-label' }, rootLabel(key)),
+            h('span', { className: 'pw-rfiles-root-chevron' }, h(IconChevron, { size: 12 })),
+            h('span', { className: 'pw-rfiles-root-label' }, rootLabel(key)),
           ),
           collapsed ? null : renderFactorySlot('sidebar.files.tree', input, treeOptions),
         )
@@ -1559,21 +1559,21 @@ window.__ModuleLoader__.load({
 
       let content = null
       if (rootsPhase === 'none') {
-        content = h('div', { className: 'cs-rfiles-state' }, t('files.noWorkspace'))
+        content = h('div', { className: 'pw-rfiles-state' }, t('files.noWorkspace'))
       } else if (searching) {
         const notes = []
         if (search.phase === 'error') {
-          notes.push(h('p', { className: 'cs-rfiles-note', 'data-tone': 'error', key: 'search-error' },
+          notes.push(h('p', { className: 'pw-rfiles-note', 'data-tone': 'error', key: 'search-error' },
             t('files.searchFailed'),
-            h('span', { className: 'cs-rfiles-note-actions' },
-              h('button', { className: 'cs-button cs-button-small', type: 'button', onClick: retry }, t('files.retry'))),
+            h('span', { className: 'pw-rfiles-note-actions' },
+              h('button', { className: 'pw-button pw-button-small', type: 'button', onClick: retry }, t('files.retry'))),
           ))
         } else if (search.phase === 'ready') {
-          if (search.count === 0) notes.push(h('p', { className: 'cs-rfiles-note', key: 'search-empty' }, t('files.searchEmpty')))
+          if (search.count === 0) notes.push(h('p', { className: 'pw-rfiles-note', key: 'search-empty' }, t('files.searchEmpty')))
           else {
-            notes.push(h('p', { className: 'cs-rfiles-note', key: 'search-count' }, t('files.searchResults', { count: String(search.count) })))
-            if (search.truncated) notes.push(h('p', { className: 'cs-rfiles-note', key: 'search-truncated' }, t('files.searchTruncated')))
-            if (search.incomplete) notes.push(h('p', { className: 'cs-rfiles-note', key: 'search-incomplete' }, t('files.searchIncomplete')))
+            notes.push(h('p', { className: 'pw-rfiles-note', key: 'search-count' }, t('files.searchResults', { count: String(search.count) })))
+            if (search.truncated) notes.push(h('p', { className: 'pw-rfiles-note', key: 'search-truncated' }, t('files.searchTruncated')))
+            if (search.incomplete) notes.push(h('p', { className: 'pw-rfiles-note', key: 'search-incomplete' }, t('files.searchIncomplete')))
           }
         }
         const groups = search.phase === 'ready' && search.count > 0 ? search.groups : []
@@ -1590,11 +1590,11 @@ window.__ModuleLoader__.load({
               onOpen: openFile,
             }, 'search'))
             : search.phase === 'loading' || search.phase === 'idle'
-              ? h('div', { className: 'cs-rfiles-state', key: 'search-loading' }, h('span', { className: 'cs-spinner', 'aria-label': t('files.loading') }))
+              ? h('div', { className: 'pw-rfiles-state', key: 'search-loading' }, h('span', { className: 'pw-spinner', 'aria-label': t('files.loading') }))
               : null,
         ]
       } else if (rootsPhase === 'loading' && roots.length === 0) {
-        content = h('div', { className: 'cs-rfiles-state' }, h('span', { className: 'cs-spinner', 'aria-label': t('files.loading') }))
+        content = h('div', { className: 'pw-rfiles-state' }, h('span', { className: 'pw-spinner', 'aria-label': t('files.loading') }))
       } else {
         content = roots.map(root => renderTree(treePathKey(root), root, {
           root: treePathKey(root),
@@ -1606,14 +1606,14 @@ window.__ModuleLoader__.load({
         }, 'tree'))
       }
 
-      return h('section', { className: 'cs-rfiles', 'aria-label': t('files.title') },
+      return h('section', { className: 'pw-rfiles', 'aria-label': t('files.title') },
         h(Styles),
-        h('header', { className: 'cs-rfiles-head' },
-          h('div', { className: 'cs-rfiles-search' },
+        h('header', { className: 'pw-rfiles-head' },
+          h('div', { className: 'pw-rfiles-search' },
             h(IconSearch, { size: 13 }),
             h('input', {
               type: 'text',
-              className: 'cs-rfiles-search-input',
+              className: 'pw-rfiles-search-input',
               value: query,
               placeholder: t('files.searchPlaceholder'),
               'aria-label': t('files.searchPlaceholder'),
@@ -1627,12 +1627,12 @@ window.__ModuleLoader__.load({
               },
             }),
             search.phase === 'loading'
-              ? h('span', { className: 'cs-spinner', 'aria-label': t('files.loading') })
+              ? h('span', { className: 'pw-spinner', 'aria-label': t('files.loading') })
               : null,
             query === ''
               ? null
               : h('button', {
-                className: 'cs-icon-button cs-rfiles-clear',
+                className: 'pw-icon-button pw-rfiles-clear',
                 type: 'button',
                 'aria-label': t('files.searchClear'),
                 title: t('files.searchClear'),
@@ -1640,18 +1640,18 @@ window.__ModuleLoader__.load({
               }, h(IconClose, { size: 12 })),
           ),
           h('button', {
-            className: 'cs-icon-button', type: 'button',
+            className: 'pw-icon-button', type: 'button',
             'aria-label': t('files.reload'), title: t('files.reload'), onClick: retry,
           }, h(IconRefresh, { size: 14 })),
           h('button', {
-            className: 'cs-icon-button', type: 'button',
+            className: 'pw-icon-button', type: 'button',
             'aria-label': hiddenLabel, title: hiddenLabel,
             'aria-pressed': includeHidden,
             'data-active': includeHidden ? 'true' : undefined,
             onClick: () => setIncludeHidden(value => !value),
           }, h(IconEye, { size: 14 })),
         ),
-        h('div', { className: 'cs-rfiles-body' }, content),
+        h('div', { className: 'pw-rfiles-body' }, content),
       )
     }
 
@@ -1663,7 +1663,7 @@ window.__ModuleLoader__.load({
     function WorkspaceFilesTitle(props) {
       const { tab } = props.useTabInfo()
       return h(React.Fragment, null,
-        h('span', { className: 'cs-rfiles-title-icon' }, h(IconWorkspace, { size: 16 })),
+        h('span', { className: 'pw-rfiles-title-icon' }, h(IconWorkspace, { size: 16 })),
         tab.title,
       )
     }
@@ -1687,12 +1687,12 @@ window.__ModuleLoader__.load({
       if (notice == null) return null
       const message = noticeText(notice, t)
       if (message === null) return null
-      return h('div', { className: 'cs-toast', role: 'status' },
+      return h('div', { className: 'pw-toast', role: 'status' },
         h(Styles),
-        h('span', { className: 'cs-toast-mark' }, h(IconWarning, { size: 14 })),
-        h('span', { className: 'cs-toast-text' }, message),
+        h('span', { className: 'pw-toast-mark' }, h(IconWarning, { size: 14 })),
+        h('span', { className: 'pw-toast-text' }, message),
         h('button', {
-          className: 'cs-icon-button', type: 'button', 'aria-label': t('notice.dismiss'),
+          className: 'pw-icon-button', type: 'button', 'aria-label': t('notice.dismiss'),
           onClick: () => picker.set({ notice: null }),
         }, h(IconClose, { size: 12 })),
       )
@@ -1701,7 +1701,7 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale', 'workspaces', 'uiWorkspace'],
       apply(ctx) {
-        ctx.effect(() => ctx.locale.register(NS, { en, zh }), 'codespace: dictionaries')
+        ctx.effect(() => ctx.locale.register(NS, { en, zh }), 'project-workspace: dictionaries')
         const t = ctx.locale.bind(NS)
         const picker = createStore({ open: false, revision: 0, notice: null, lastDir: null })
 
@@ -1751,7 +1751,7 @@ window.__ModuleLoader__.load({
               title: () => t('files.title'),
               icon: IconWorkspace,
             }],
-          }), 'codespace: workspace files type')
+          }), 'project-workspace: workspace files type')
 
           child.slots.inject('sidebar.right.pane.tab', () => child.slots.register({
             name: 'sidebar.right.pane.tab',

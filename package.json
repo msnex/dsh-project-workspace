@@ -1,9 +1,9 @@
 {
-  "name": "@local/dsh-codespace",
+  "name": "@msnex/dsh-project-workspace",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Open code-workspace files as DSH project workspaces.",
+  "description": "Open code-workspace files as DSH workspaces.",
   "license": "MIT",
   "exports": {
     ".": "./index.js",

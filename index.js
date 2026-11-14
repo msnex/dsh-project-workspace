@@ -1,12 +1,12 @@
 /**
- * Host half of the code-workspace bundle.
+ * Host half of the project-workspace bundle.
  *
- * It serves the WorkSpaces page over Connection's authenticated fetch fence,
+ * It serves the Project workspaces page over Connection's authenticated fetch fence,
  * records the workspaces opened from `.code-workspace` files, and grants every
  * declared folder beyond the session root as an additional writable directory
  * for the sessions that run in that workspace.
  *
- * @module @local/dsh-codespace
+ * @module @msnex/dsh-project-workspace
  */
 
 import { realpathSync } from 'node:fs'
@@ -21,11 +21,11 @@ export const inject = ['agents', 'connection', 'sandboxPolicy', 'timer', 'worksp
 
 /** Exact routes and the handler each one serves. */
 const ROUTES = [
-  ['/api/codespace.browse', 'browse'],
-  ['/api/codespace.dir', 'dir'],
-  ['/api/codespace.list', 'list'],
-  ['/api/codespace.open', 'open'],
-  ['/api/codespace.search', 'search'],
+  ['/api/project-workspace.browse', 'browse'],
+  ['/api/project-workspace.dir', 'dir'],
+  ['/api/project-workspace.list', 'list'],
+  ['/api/project-workspace.open', 'open'],
+  ['/api/project-workspace.search', 'search'],
 ]
 
 /** Revalidation interval for registered writable roots. */
@@ -39,7 +39,7 @@ const REVALIDATE_MS = 60_000
 export function apply(ctx) {
   const log = (...args) => {
     try {
-      ctx.logger?.warn?.('[codespace]', ...args)
+      ctx.logger?.warn?.('[project-workspace]', ...args)
     } catch {
       // Logging must never affect the feature.
     }
@@ -96,7 +96,7 @@ export function apply(ctx) {
         }
       }
     }
-  }, 'codespace: routes')
+  }, 'project-workspace: routes')
 
   // Load the association between workspace directories and declared folders,
   // then reconcile every agent that is already live.
@@ -140,5 +140,5 @@ export function apply(ctx) {
         grants.dispose()
       }
     }
-  }, 'codespace: writable roots')
+  }, 'project-workspace: writable roots')
 }
