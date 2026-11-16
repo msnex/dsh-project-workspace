@@ -73,6 +73,7 @@ window.__ModuleLoader__.load({
       'error.noExistingFolders': 'None of the folders declared by the project workspace file exists.',
       'error.workspaceDirMissing': 'The project workspace folder is not available.',
       'error.workspaceCreateFailed': 'The project workspace could not be created.',
+      'error.workspaceNotFound': 'This project workspace is no longer available.',
       'error.titleFailed': 'The project workspace could not be named.',
       'error.browseFailed': 'That folder could not be read.',
       'error.notADirectory': 'That path is not a folder.',
@@ -142,6 +143,7 @@ window.__ModuleLoader__.load({
       'error.noExistingFolders': '项目工作空间文件中的文件夹都不存在。',
       'error.workspaceDirMissing': '项目工作空间目录不可用。',
       'error.workspaceCreateFailed': '无法创建项目工作空间。',
+      'error.workspaceNotFound': '该项目工作空间已不可用。',
       'error.titleFailed': '无法命名项目工作空间。',
       'error.browseFailed': '无法读取该目录。',
       'error.notADirectory': '所选路径不是目录。',
@@ -179,6 +181,7 @@ window.__ModuleLoader__.load({
       'no-existing-folders': 'error.noExistingFolders',
       'workspace-dir-missing': 'error.workspaceDirMissing',
       'workspace-create-failed': 'error.workspaceCreateFailed',
+      'workspace-not-found': 'error.workspaceNotFound',
       'title-failed': 'error.titleFailed',
       'browse-failed': 'error.browseFailed',
       'not-a-directory': 'error.notADirectory',
@@ -851,6 +854,28 @@ window.__ModuleLoader__.load({
         setBusyId(entry.workspaceId)
         setRowError(null)
         try {
+          // Clicking a project workspace is an explicit reload point: re-read
+          // its `.code-workspace` before opening so roots and writable grants
+          // follow the file on disk.
+          const response = await fetch('api/project-workspace.refresh', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ workspaceId: entry.workspaceId }),
+          })
+          const data = await response.json().catch(() => null)
+          if (!response.ok || data?.ok !== true) {
+            setRowError(failureText(data, t))
+            setRefresh(value => value + 1)
+            return
+          }
+          if (Array.isArray(data.roots)) {
+            setList(current => ({
+              ...current,
+              entries: current.entries.map(item => item.workspaceId === entry.workspaceId
+                ? { ...item, roots: data.roots, folderCount: data.roots.length }
+                : item),
+            }))
+          }
           await waitForWorkspace(workspaces.list, entry.workspaceId, BUSY_TIMEOUT_MS)
           await uiWorkspace.openWorkspace(entry.workspaceId)
         } catch (error) {
@@ -1265,6 +1290,7 @@ window.__ModuleLoader__.load({
       const expandedRef = React.useRef([])
       expandedRef.current = expanded
       const searchAbortRef = React.useRef(null)
+      const wasVisibleRef = React.useRef(tab.visible === true)
       const retry = React.useCallback(() => setRefreshKey(value => value + 1), [])
 
       /**
@@ -1365,6 +1391,13 @@ window.__ModuleLoader__.load({
         })()
         return () => { cancelled = true }
       }, [cwd, sessionsReady, refreshKey, loadLevel])
+
+      // The tab stays mounted while hidden. Revalidate its workspace roots
+      // whenever the user returns to the tab, matching an explicit reopen.
+      React.useEffect(() => {
+        if (tab.visible && !wasVisibleRef.current) setRefreshKey(value => value + 1)
+        wasVisibleRef.current = tab.visible
+      }, [tab.visible])
 
       // Debounce the search query.
       React.useEffect(() => {

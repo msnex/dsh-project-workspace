@@ -16,6 +16,7 @@ import { createWorkspaceGrants } from './lib/grants.js'
 import { createHistory } from './lib/history.js'
 import { createSessionRootResolver } from './lib/session-roots.js'
 import { createWorkspaceRoutes } from './lib/routes.js'
+import { createWorkspaceRefresher } from './lib/workspace-refresh.js'
 
 /** Services the Host half cannot work without. */
 export const inject = ['agents', 'connection', 'sandboxPolicy', 'timer', 'workspaceRegistry']
@@ -26,6 +27,7 @@ const ROUTES = [
   ['/api/project-workspace.dir', 'dir'],
   ['/api/project-workspace.list', 'list'],
   ['/api/project-workspace.open', 'open'],
+  ['/api/project-workspace.refresh', 'refresh'],
   ['/api/project-workspace.references', 'references'],
   ['/api/project-workspace.search', 'search'],
 ]
@@ -63,28 +65,39 @@ export function apply(ctx) {
     logger: log,
   })
 
+  const applyRoots = (workspacePath, roots, workspaceId) => {
+    grants.setRoots(workspacePath, roots, workspaceId)
+    // A page read, an open, or a file refresh can publish many workspace
+    // folders in one request; coalesce the follow-up reconciliation into one pass.
+    if (reconcileScheduled) return
+    reconcileScheduled = true
+    void Promise.resolve()
+      .then(() => {
+        reconcileScheduled = false
+        return grants.reconcileAll()
+      })
+      .catch((error) => { log('reconciliation failed', error) })
+  }
+
+  const refresher = createWorkspaceRefresher({
+    history,
+    getWorkspace: workspaceId => ctx.workspaceRegistry.get(workspaceId),
+    onRoots: applyRoots,
+    logger: log,
+  })
+
   const routes = createWorkspaceRoutes({
     getRegistry: () => ctx.workspaceRegistry,
     history,
+    refreshWorkspace: (entry, options) => refresher.refreshEntry(entry, options),
     resolveSessionRoots: createSessionRootResolver({
       getAgent: sessionId => ctx.agents.get(sessionId),
       getWorkspace: workspaceId => ctx.workspaceRegistry.get(workspaceId),
       loadHistory: () => history.load(),
+      refreshEntry: entry => refresher.refreshEntry(entry),
       logger: log,
     }),
-    onRoots: (workspacePath, roots, workspaceId) => {
-      grants.setRoots(workspacePath, roots, workspaceId)
-      // A page read or an open can publish many workspace folders in one
-      // request; coalesce the follow-up reconciliation into one pass.
-      if (reconcileScheduled) return
-      reconcileScheduled = true
-      void Promise.resolve()
-        .then(() => {
-          reconcileScheduled = false
-          return grants.reconcileAll()
-        })
-        .catch((error) => { log('reconciliation failed', error) })
-    },
+    onRoots: applyRoots,
     logger: log,
   })
 
@@ -107,10 +120,11 @@ export function apply(ctx) {
   }, 'project-workspace: routes')
 
   // Load the association between workspace directories and declared folders,
-  // then reconcile every agent that is already live.
+  // re-read each workspace file, then reconcile every agent that is already live.
   const ready = history.load()
-    .then((entries) => {
-      for (const entry of entries) {
+    .then(async (entries) => {
+      const currentEntries = await refresher.refreshAll(entries)
+      for (const entry of currentEntries) {
         const workspace = ctx.workspaceRegistry.get(entry.workspaceId)
         if (workspace !== undefined) grants.setRoots(workspace.path, entry.roots, String(workspace.id))
       }

@@ -38,8 +38,15 @@ test('the bundle patch mounts this package under the renamed row', () => {
 test('every Host route has a browser call site under the renamed prefix', () => {
   const hostRoutes = new Set([...host.matchAll(/'\/api\/project-workspace\.([a-z]+)'/g)].map(match => match[1]))
   const clientRoutes = new Set([...client.matchAll(/'api\/project-workspace\.([a-z]+)'/g)].map(match => match[1]))
-  assert.deepEqual([...hostRoutes].sort(), ['browse', 'dir', 'list', 'open', 'references', 'search'])
+  assert.deepEqual([...hostRoutes].sort(), ['browse', 'dir', 'list', 'open', 'references', 'refresh', 'search'])
   assert.deepEqual([...clientRoutes].sort(), [...hostRoutes].sort())
+})
+
+test('the project workspace list and file tab revalidate their workspace files', () => {
+  assert.match(client, /api\/project-workspace\.refresh/)
+  assert.match(client, /wasVisibleRef/)
+  assert.match(client, /tab\.visible/)
+  assert.match(client, /setRefreshKey\(value => value \+ 1\)/)
 })
 
 test('the browser half registers the project workspace @ source first', () => {
