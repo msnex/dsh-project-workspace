@@ -14,6 +14,7 @@ import { stat } from 'node:fs/promises'
 import { workspaceHistoryFile } from './lib/dsh-home.js'
 import { createWorkspaceGrants } from './lib/grants.js'
 import { createHistory } from './lib/history.js'
+import { createSessionRootResolver } from './lib/session-roots.js'
 import { createWorkspaceRoutes } from './lib/routes.js'
 
 /** Services the Host half cannot work without. */
@@ -25,6 +26,7 @@ const ROUTES = [
   ['/api/project-workspace.dir', 'dir'],
   ['/api/project-workspace.list', 'list'],
   ['/api/project-workspace.open', 'open'],
+  ['/api/project-workspace.references', 'references'],
   ['/api/project-workspace.search', 'search'],
 ]
 
@@ -64,6 +66,12 @@ export function apply(ctx) {
   const routes = createWorkspaceRoutes({
     getRegistry: () => ctx.workspaceRegistry,
     history,
+    resolveSessionRoots: createSessionRootResolver({
+      getAgent: sessionId => ctx.agents.get(sessionId),
+      getWorkspace: workspaceId => ctx.workspaceRegistry.get(workspaceId),
+      loadHistory: () => history.load(),
+      logger: log,
+    }),
     onRoots: (workspacePath, roots, workspaceId) => {
       grants.setRoots(workspacePath, roots, workspaceId)
       // A page read or an open can publish many workspace folders in one

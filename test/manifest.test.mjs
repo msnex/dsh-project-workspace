@@ -38,8 +38,24 @@ test('the bundle patch mounts this package under the renamed row', () => {
 test('every Host route has a browser call site under the renamed prefix', () => {
   const hostRoutes = new Set([...host.matchAll(/'\/api\/project-workspace\.([a-z]+)'/g)].map(match => match[1]))
   const clientRoutes = new Set([...client.matchAll(/'api\/project-workspace\.([a-z]+)'/g)].map(match => match[1]))
-  assert.deepEqual([...hostRoutes].sort(), ['browse', 'dir', 'list', 'open', 'search'])
+  assert.deepEqual([...hostRoutes].sort(), ['browse', 'dir', 'list', 'open', 'references', 'search'])
   assert.deepEqual([...clientRoutes].sort(), [...hostRoutes].sort())
+})
+
+test('the browser half registers the project workspace @ source first', () => {
+  assert.match(client, /trigger: '@'/)
+  assert.match(client, /name: MENTION_SOURCE_NAME/)
+  assert.match(client, /order: MENTION_SOURCE_ORDER/)
+  assert.match(client, /showGroupTitle: false/)
+  assert.match(client, /inputTriggers\.registerSource/)
+  assert.match(client, /const MENTION_SOURCE_ORDER = -10/)
+  assert.match(client, /drill: true/)
+  assert.match(client, /action === 'drill'/)
+  assert.match(client, /appearance: 'folder'/)
+  assert.match(client, /appearance: 'file'/)
+  assert.match(client, /scheduleMentionFocus/)
+  assert.match(client, /CORE_REFERENCE_SOURCE/)
+  assert.match(client, /controller\.hover\(MENTION_SOURCE_NAME, 0\)/)
 })
 
 test('no shipped file mentions the previous package name', () => {

@@ -21,6 +21,10 @@ window.__ModuleLoader__.load({
     const FILES_KIND = 'project-workspace.files'
     const BUSY_TIMEOUT_MS = 6000
     const SEARCH_DEBOUNCE_MS = 250
+    const MENTION_DEBOUNCE_MS = 150
+    const MENTION_SOURCE_NAME = 'project-workspace'
+    const MENTION_SOURCE_ORDER = -10
+    const CORE_REFERENCE_SOURCE = 'reference'
     const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
 
     /** Bilingual copy for the panel, page, dialog, and structured failures. */
@@ -89,6 +93,7 @@ window.__ModuleLoader__.load({
       'files.loading': 'Loading files',
       'files.failed': 'Could not read this folder.',
       'files.unavailable': 'The file tree is unavailable.',
+      'mention.workspace': 'Project workspace',
     }
 
     /** Chinese copy mirroring {@link en}. */
@@ -157,6 +162,7 @@ window.__ModuleLoader__.load({
       'files.loading': '正在读取文件',
       'files.failed': '无法读取该文件夹。',
       'files.unavailable': '文件树不可用。',
+      'mention.workspace': '项目工作空间',
     }
 
     /** Host failure codes mapped to localized copy. */
@@ -1698,12 +1704,262 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /**
+     * Wait out the completion debounce, resolving false when the caller aborts.
+     * @param signal - candidate request signal.
+     * @returns whether the request may proceed.
+     */
+    function mentionDelay(signal) {
+      if (signal?.aborted) return Promise.resolve(false)
+      return new Promise((resolve) => {
+        const onAbort = () => {
+          clearTimeout(timer)
+          resolve(false)
+        }
+        const timer = setTimeout(() => {
+          signal?.removeEventListener('abort', onAbort)
+          resolve(true)
+        }, MENTION_DEBOUNCE_MS)
+        signal?.addEventListener('abort', onAbort, { once: true })
+      })
+    }
+
+    /**
+     * Decode the opaque pick payload stored on one candidate row.
+     * @param value - candidate value.
+     * @returns the decoded value, or undefined when malformed.
+     */
+    function parseMentionValue(value) {
+      if (typeof value !== 'string') return undefined
+      try {
+        const parsed = JSON.parse(value)
+        return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : undefined
+      } catch {
+        return undefined
+      }
+    }
+
+    /**
+     * Give the project-workspace group the menu's default highlight once its
+     * candidates exist.
+     *
+     * The trigger pipeline highlights the first source group that settles. The
+     * project source debounces and searches the Host, so the shipped reference
+     * source usually settles first and keeps the highlight even after this
+     * group appears above it. A zero-delay pass after this source settles moves
+     * the default highlight to this group's first row, but never steals a
+     * highlight the user has already moved to another row or group.
+     *
+     * @param input - client context, trigger service, session, and query.
+     * @returns nothing.
+     */
+    function scheduleMentionFocus({ ctx, inputTriggers, sessionId, query }) {
+      if (typeof sessionId !== 'string' || sessionId === '') return
+      if (typeof query !== 'string' || query.trim() === '') return
+      if (typeof ctx?.get !== 'function' || inputTriggers === undefined) return
+      setTimeout(() => {
+        try {
+          const sessions = ctx.get('sessions')
+          const binding = sessions?.binding?.(sessionId)
+          if (binding === undefined || binding === null || binding.ctx === undefined) return
+          const controller = inputTriggers.sessionOf(binding.ctx)
+          const state = controller.menu.getSnapshot()
+          if (state === null || typeof state !== 'object' || state.open !== true) return
+          if (state.hit === null || typeof state.hit !== 'object' || state.hit.query !== query) return
+          const group = Array.isArray(state.groups)
+            ? state.groups.find(item => item.source === MENTION_SOURCE_NAME)
+            : undefined
+          if (group === undefined || group.status !== 'ready' || !Array.isArray(group.items) || group.items.length === 0) {
+            return
+          }
+          const highlight = state.highlight
+          const isDefault = highlight === null || highlight === undefined
+            || (highlight.source === CORE_REFERENCE_SOURCE && highlight.index === 0)
+          if (!isDefault) return
+          controller.hover(MENTION_SOURCE_NAME, 0)
+        } catch {
+          // The menu or session generation may have been disposed; focus is
+          // best-effort presentation and must never affect input.
+        }
+      }, 0)
+    }
+
+    /**
+     * Project the Host reference payload into input-trigger rows.
+     *
+     * With an empty query the rows are the project workspace's roots. Once the
+     * user types, the roots give way to candidates already grouped by root on
+     * the Host, so the first highlighted row is a real file or directory.
+     *
+     * @param data - decoded Host payload.
+     * @param query - live query text after `@`.
+     * @param t - project-workspace translator.
+     * @returns rows for the input-trigger menu.
+     */
+    function mentionRows(data, query, t) {
+      const roots = Array.isArray(data.roots) ? data.roots : []
+      const additional = roots.filter(root => root !== null && typeof root === 'object' && root.primary !== true)
+      if (additional.length === 0) return []
+      const rows = []
+      if (query.trim() === '') {
+        for (const root of roots) {
+          if (root === null || typeof root !== 'object') continue
+          if (typeof root.mention !== 'string' || typeof root.path !== 'string') continue
+          const name = typeof root.name === 'string' && root.name !== '' ? root.name : root.path
+          const drillMention = typeof root.drillMention === 'string' ? root.drillMention : undefined
+          const value = { kind: 'directory', label: name, mention: root.mention }
+          if (drillMention !== undefined) value.drillMention = drillMention
+          rows.push({
+            name: `${name}/`,
+            description: root.path,
+            icon: 'folder',
+            section: t('mention.workspace'),
+            value: JSON.stringify(value),
+            ...(drillMention === undefined ? {} : { drill: true }),
+          })
+        }
+        return rows
+      }
+      const groups = Array.isArray(data.groups) ? data.groups : []
+      for (const group of groups) {
+        if (group === null || typeof group !== 'object' || !Array.isArray(group.candidates)) continue
+        const section = group.workspace === true
+          ? t('mention.workspace')
+          : typeof group.name === 'string' && group.name !== ''
+            ? group.name
+            : undefined
+        for (const candidate of group.candidates) {
+          if (candidate === null || typeof candidate !== 'object') continue
+          if (typeof candidate.mention !== 'string' || typeof candidate.name !== 'string' || candidate.name === '') continue
+          const directory = candidate.kind === 'directory'
+          const drillMention = directory && typeof candidate.drillMention === 'string'
+            ? candidate.drillMention
+            : undefined
+          const description = typeof candidate.description === 'string' && candidate.description !== ''
+            ? candidate.description
+            : typeof candidate.parent === 'string' && candidate.parent !== ''
+              ? candidate.parent
+              : undefined
+          const value = { kind: directory ? 'directory' : 'file', label: candidate.name, mention: candidate.mention }
+          if (drillMention !== undefined) value.drillMention = drillMention
+          rows.push({
+            name: directory ? `${candidate.name}/` : candidate.name,
+            ...(description === undefined ? {} : { description }),
+            icon: directory ? 'folder' : 'file',
+            ...(section === undefined ? {} : { section }),
+            value: JSON.stringify(value),
+            ...(drillMention === undefined ? {} : { drill: true }),
+          })
+        }
+      }
+      return rows
+    }
+
+    /**
+     * The `@` source that adds project-workspace roots and their files.
+     * @param t - project-workspace translator.
+     * @param focus - default-highlight callback receiving `(sessionId, query)`.
+     * @returns the input-trigger source.
+     */
+    function createMentionSource(t, focus) {
+      return {
+        trigger: '@',
+        name: MENTION_SOURCE_NAME,
+        order: MENTION_SOURCE_ORDER,
+        showGroupTitle: false,
+        async candidates(session, { query, quoted, signal }) {
+          const sessionId = typeof session?.sessionId === 'string' ? session.sessionId : ''
+          if (sessionId === '') return []
+          const queryText = typeof query === 'string' ? query : ''
+          if (!await mentionDelay(signal)) return []
+          if (signal?.aborted) return []
+          let data
+          try {
+            const response = await fetch('api/project-workspace.references', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                sessionId,
+                query: queryText,
+                quoted: quoted === true,
+              }),
+              signal,
+            })
+            if (!response.ok) return []
+            data = await response.json()
+          } catch {
+            return []
+          }
+          if (signal?.aborted) return []
+          if (data === null || typeof data !== 'object' || data.ok !== true) return []
+          const rows = mentionRows(data, queryText, t)
+          if (rows.length > 0 && queryText.trim() !== '' && !signal?.aborted) {
+            try {
+              focus?.(sessionId, queryText)
+            } catch {
+              // Focus is best-effort presentation.
+            }
+          }
+          return rows
+        },
+        onPick({ candidate, action }) {
+          const value = parseMentionValue(candidate?.value)
+          if (value === undefined || typeof value.mention !== 'string') return undefined
+          const label = typeof value.label === 'string' && value.label !== ''
+            ? value.label
+            : typeof candidate?.name === 'string'
+              ? candidate.name.replace(/\/+$/, '')
+              : ''
+          if (label === '') return undefined
+          if (value.kind === 'directory') {
+            if (action === 'drill' && typeof value.drillMention === 'string') {
+              return { text: value.drillMention, continue: true }
+            }
+            return {
+              insert: {
+                source: 'reference',
+                ref: value.mention,
+                label: `${label}/`,
+                appearance: 'folder',
+                clipboardText: value.mention,
+              },
+            }
+          }
+          if (value.kind !== 'file') return undefined
+          return {
+            insert: {
+              source: 'reference',
+              ref: value.mention,
+              label,
+              appearance: 'file',
+              clipboardText: value.mention,
+            },
+          }
+        },
+      }
+    }
+
     return {
       inject: ['slots', 'locale', 'workspaces', 'uiWorkspace'],
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(NS, { en, zh }), 'project-workspace: dictionaries')
         const t = ctx.locale.bind(NS)
         const picker = createStore({ open: false, revision: 0, notice: null, lastDir: null })
+
+        // Optional: without the trigger pipeline the rest of the plugin keeps
+        // working; the source joins the @ menu as soon as the service exists.
+        ctx.inject(['inputTriggers'], (child) => {
+          const focusMention = (sessionId, query) => scheduleMentionFocus({
+            ctx,
+            inputTriggers: child.inputTriggers,
+            sessionId,
+            query,
+          })
+          child.effect(
+            () => child.inputTriggers.registerSource(createMentionSource(t, focusMention)),
+            'project-workspace: @ source',
+          )
+        })
 
         ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
           name: 'sidebar.panellist',
