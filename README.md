@@ -33,3 +33,6 @@ Only `name` and `path` are read; every other field is ignored.
 - The workspace is named after the file, without its `.code-workspace` extension.
 - A **Project workspaces** entry in the left sidebar loads `.code-workspace` files and lists the workspaces you have opened; deleting a workspace also removes it from that list.
 - A **Project workspace files** tab in the right sidebar browses every directory and file in the project workspace, with search and reload.
+- Typing `@` in the composer opens a **Project workspace** group that lists every root of the project workspace while the query is empty. Choosing a folder inserts a folder reference; Tab or the row's chevron drills into it. After you type, matching files and folders are grouped by root instead.
+- Files and folders from additional roots are grouped by root and inserted as absolute `@` paths, matching the native convention for paths outside the project workspace root. Drill text stays relative to the project workspace root, so the shipped folder breadcrumbs keep working.
+- A root on another volume still supports folder references, but its row does not drill because no relative breadcrumb path exists.
